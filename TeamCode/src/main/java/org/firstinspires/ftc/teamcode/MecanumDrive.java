@@ -62,28 +62,28 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 0.002937;
-        public double lateralInPerTick = inPerTick;
-        public double trackWidthTicks = 5188.101;
+        public double inPerTick = 0.002969;
+        public double lateralInPerTick = inPerTick; // run LatRampLog if having issues
+        public double trackWidthTicks = 5575.1;
 
         // feedforward parameters (in tick units)
-        public double kS = 0.78;
-        public double kV = 0.00057392;
-        public double kA = 0.00003;
+        public double kS = 0.53;
+        public double kV = 0.000541;
+        public double kA = 0.00004;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 40;
-        public double minProfileAccel = -25;
-        public double maxProfileAccel = 40;
+        public double maxWheelVel = 30;
+        public double minProfileAccel = -30;
+        public double maxProfileAccel = 30;
 
         // turn profile parameters (in radians)
         public double maxAngVel = 2.531; // shared with path
         public double maxAngAccel = 2.531; // ~ Math.toRadians(145)
 
         // path controller gains
-        public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double axialGain = 2.0;
+        public double lateralGain = 3.0;
+        public double headingGain = 3.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -137,8 +137,7 @@ public final class MecanumDrive {
 
             imu = lazyImu.get();
 
-            // TODO: reverse encoders if needed
-            //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+
         }
 
         @Override
@@ -235,7 +234,7 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick);
+        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -286,7 +285,19 @@ public final class MecanumDrive {
                 t = Actions.now() - beginTs;
             }
 
-            if (t >= timeTrajectory.duration) {
+            // UNCOMMENT HERE
+            Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
+            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            PoseVelocity2d robotVelRobot = updatePoseEstimate();
+            Pose2d error = txWorldTarget.value().minusExp(pose);
+
+            // FIXME: find the right tolerances
+            // UNCOMMENT HERE
+            if ((t >= timeTrajectory.duration
+                    && error.position.norm() < 1
+                    && Math.abs(error.heading.toDouble()) < 1
+                    && robotVelRobot.linearVel.norm() < 5)
+                    || t >= timeTrajectory.duration + 1) {
                 leftFront.setPower(0);
                 leftBack.setPower(0);
                 rightBack.setPower(0);
@@ -295,10 +306,22 @@ public final class MecanumDrive {
                 return false;
             }
 
-            Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
-            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+            // COMMENT HERE
+//            if (t >= timeTrajectory.duration) {
+//                leftFront.setPower(0);
+//                leftBack.setPower(0);
+//                rightBack.setPower(0);
+//                rightFront.setPower(0);
+//
+//                return false;
+//            }
 
-            PoseVelocity2d robotVelRobot = updatePoseEstimate();
+            // COMMENT HERE
+//            Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
+//            targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
+//            PoseVelocity2d robotVelRobot = updatePoseEstimate();
+
+
 
             PoseVelocity2dDual<Time> command = new HolonomicController(
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
@@ -329,7 +352,9 @@ public final class MecanumDrive {
             p.put("y", pose.position.y);
             p.put("heading (deg)", Math.toDegrees(pose.heading.toDouble()));
 
-            Pose2d error = txWorldTarget.value().minusExp(pose);
+            // COMMENT HERE
+//            Pose2d error = txWorldTarget.value().minusExp(pose);
+
             p.put("xError", error.position.x);
             p.put("yError", error.position.y);
             p.put("headingError (deg)", Math.toDegrees(error.heading.toDouble()));
