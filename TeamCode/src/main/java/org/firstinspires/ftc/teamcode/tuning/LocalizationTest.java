@@ -7,10 +7,12 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.Drawing;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.TankDrive;
+import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
 
 public class LocalizationTest extends LinearOpMode {
     @Override
@@ -33,9 +35,22 @@ public class LocalizationTest extends LinearOpMode {
 
                 drive.updatePoseEstimate();
 
+
                 telemetry.addData("x", drive.pose.position.x);
                 telemetry.addData("y", drive.pose.position.y);
                 telemetry.addData("heading (deg)", Math.toDegrees(drive.pose.heading.toDouble()));
+                telemetry.addData("heading (toDouble)", drive.pose.heading.toDouble());
+                telemetry.addLine("--------------------------------");
+
+                // this value is equal to the yaw
+                telemetry.addData("LOCALIZER heading (radians)", drive.pose.heading.toDouble());
+                telemetry.addData("CLIPPED heading (radians)", Range.clip(drive.pose.heading.toDouble(), -3.1415, 3.1415));
+                telemetry.addLine("--------------------------------");
+
+                if (drive.localizer instanceof TwoDeadWheelLocalizer) {
+                    telemetry.addData("Turn Count", ((TwoDeadWheelLocalizer) drive.localizer).turnCount);
+                }
+
                 telemetry.update();
 
                 TelemetryPacket packet = new TelemetryPacket();

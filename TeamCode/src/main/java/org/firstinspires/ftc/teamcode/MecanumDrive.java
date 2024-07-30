@@ -62,28 +62,55 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
+
+
         public double inPerTick = 0.002969;
-        public double lateralInPerTick = inPerTick; // run LatRampLog if having issues
-        public double trackWidthTicks = 5575.1;
+
+        public double lateralInPerTick =  inPerTick; // run LatRampLog if having issues (normally = inPerTick)
+
+        // 30 = 5575.1
+        public double trackWidthTicks = 5128.5;
 
         // feedforward parameters (in tick units)
-        public double kS = 0.53;
-        public double kV = 0.000541;
-        public double kA = 0.00004;
+
+        // 30 = 0.53
+        public double kS = 0.54;
+
+        // 30 = 0.000541
+        public double kV = 0.000571;
+
+        // 30 = 0.00004
+        public double kA = 0.000055;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 30;
-        public double minProfileAccel = -30;
-        public double maxProfileAccel = 30;
+
+        // 30 = 30
+        public double maxWheelVel = 40;
+
+        // 30 = -30
+        public double minProfileAccel = -40;
+
+        // 30 = 30
+        public double maxProfileAccel = 40;
 
         // turn profile parameters (in radians)
-        public double maxAngVel = 2.531; // shared with path
-        public double maxAngAccel = 2.531; // ~ Math.toRadians(145)
+
+        // 30 = 2.531 ~ Math.toRadians(145)
+        public double maxAngVel = 2.880; // shared with path
+
+        // 30 = 2.531 ~ Math.toRadians(145)
+        public double maxAngAccel = 2.880; // ~ 165 degrees
 
         // path controller gains
-        public double axialGain = 2.0;
-        public double lateralGain = 3.0;
-        public double headingGain = 3.0; // shared with turn
+
+        // 30 = 2.0
+        public double axialGain = 5.0;
+
+        // 30 = 3.0
+        public double lateralGain = 5.0;
+
+        // 30 = 3.0
+        public double headingGain = 5.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -112,6 +139,10 @@ public final class MecanumDrive {
     public final LazyImu lazyImu;
 
     public final Localizer localizer;
+
+
+
+
     public Pose2d pose;
 
     private final LinkedList<Pose2d> poseHistory = new LinkedList<>();
@@ -234,7 +265,10 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
+
+
         localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
+
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -291,7 +325,7 @@ public final class MecanumDrive {
             PoseVelocity2d robotVelRobot = updatePoseEstimate();
             Pose2d error = txWorldTarget.value().minusExp(pose);
 
-            // FIXME: find the right tolerances
+            // TODO: find the right tolerances
             // UNCOMMENT HERE
             if ((t >= timeTrajectory.duration
                     && error.position.norm() < 1

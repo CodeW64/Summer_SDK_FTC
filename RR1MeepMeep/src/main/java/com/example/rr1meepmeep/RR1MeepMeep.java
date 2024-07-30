@@ -25,8 +25,15 @@ public class RR1MeepMeep {
 //                .turn(Math.toRadians(90))
 //                .lineToY(0)
 //                .turn(Math.toRadians(90))
-                .splineTo(new Vector2d(24, 24), Math.PI / 2)
-                .splineTo(new Vector2d(0, 48), Math.PI)
+//                .splineTo(new Vector2d(24, 24), Math.PI / 2)
+//                .splineTo(new Vector2d(0, 48), Math.PI)
+
+//                        .lineToX(24)
+//                        .splineToSplineHeading(new Pose2d(36, 24, Math.toRadians(0)), Math.toRadians(90))
+
+                .splineTo(new Vector2d(24,24), Math.toRadians(0))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(0,0), Math.toRadians(180))
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_POWERPLAY_OFFICIAL)
